@@ -21,15 +21,6 @@ app.geometry("600x500")
 app.title('PDF Alchemy - Convert PDF to Word/Excel')
 app.resizable(False, False)
 
-
-
-
-
-
-
-
-
-
 # Definición de variables globales
 rutaarchivo = ""
 botonruta = None
@@ -72,7 +63,6 @@ def switch_boton(value):
     imagenql.forget()
     imagenql2.pack(padx=20)
 
-
 def transformar():
     global rutaarchivo
     global botonruta
@@ -95,7 +85,6 @@ def transformar():
         botonruta.pack(padx=50)
         imagenql.pack(pady=20, padx=20)
         imagenql2.forget()
-
 
     if seleccion == "PDF to Word":
         progressbar.start()
@@ -147,8 +136,6 @@ def show_checkmark():
     label.forget()
     imagenql.pack(pady=20, padx=20)
 
-
-
 my_font = customtkinter.CTkFont(family=("helvetica"), size=24, weight="bold")
 my_font2 = customtkinter.CTkFont(family=("helvetica"), size=16, weight="bold")
 
@@ -183,7 +170,6 @@ opciones = ["PDF to Excel", "PDF to Word"]
 # Crear el selector
 selector = customtkinter.CTkOptionMenu(frame_arriba, values=opciones, command=switch_boton)
 selector.set("Now Pick target format")
-
 
 txt = ("Brewing the elixir. Your PDF will be renewed!\nJust a little patience")
 count = 0
