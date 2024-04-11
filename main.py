@@ -30,7 +30,8 @@ global imagenql2
 def seleccionar_documento():
     global rutaarchivo
     global botonruta
-    filename = customtkinter.filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
+    filename = customtkinter.filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")], )
+    print(filename)
     rutaarchivo = os.path.splitext(filename)[0]
     if rutaarchivo == "":
         mensaje = etiquetaruta.configure(text="No files selected", font=("helvetica", 15))
@@ -51,6 +52,7 @@ def switch_boton(value):
     global botontransformar
     global progressbar
     global botonruta
+    global opcion
     opcion = selector.get()
     etiquetasaludo.forget()
     global etiquetasaludo2
@@ -62,10 +64,13 @@ def switch_boton(value):
     selector.place_forget()
     imagenql.forget()
     imagenql2.pack(padx=20)
+    frame_arriba.pack_propagate(True)
+    frame_abajo.pack_propagate(True)
 
 def transformar():
     global rutaarchivo
     global botonruta
+    botontransformar.configure(text="Converting\n"+ opcion)
     seleccion = selector.get()
     etiquetasaludo2.forget()
     progressbar = customtkinter.CTkProgressBar(frame_abajo, orientation="horizontal", mode="indeterminate", width=200, height=23, fg_color="white")
@@ -79,7 +84,7 @@ def transformar():
         frame_arriba.configure(fg_color="#f0c808")
         frame_abajo.configure(fg_color="white")
         botontransformar.forget()
-        etiquetasaludo.configure(text="Point your wand! \nChoose a PDF for alchemical transformation.")
+        etiquetasaludo.configure(text="Point your wand and choose a PDF \nfor alchemical transformation.", font=(my_font))
         etiquetasaludo.pack(padx=50, pady=20)
         botonruta = customtkinter.CTkButton(frame_arriba, text="Select a PDF to start", command=seleccionar_documento, fg_color="#dd1c1a", hover_color="#ea4b48", width=50, height=50)
         botonruta.pack(padx=50)
@@ -88,7 +93,7 @@ def transformar():
 
     if seleccion == "PDF to Word":
         progressbar.start()
-        label.pack(padx=50, pady=30)
+        label.pack(padx=50)
         rutapdf = rutaarchivo+".pdf"
         rutadocx = rutaarchivo+".docx"
 
@@ -105,6 +110,7 @@ def transformar():
         threading.Thread(target=pdf_to_docx, args=(rutapdf, rutadocx)).start()
 
     elif seleccion == "PDF to Excel":
+
         progressbar.start()
         label.pack(padx=50, pady=30)
         rutapdf = rutaarchivo+".pdf"
@@ -152,7 +158,7 @@ etiquetasaludo = customtkinter.CTkLabel(frame_arriba, text="First, choose the fi
 etiquetasaludo.pack(padx=50, pady=30)
 
 gato1 = customtkinter.CTkImage(light_image=Image.open("image.jpeg"),size=(500,269))
-gato2 = customtkinter.CTkImage(light_image=Image.open("imagen2.jpg"),size=(1021,508))
+gato2 = customtkinter.CTkImage(light_image=Image.open("imagen2.jpg"),size=(400, 200))
 # Creating label and packing it to the window.
 imagenql = customtkinter.CTkLabel(frame_abajo, image=gato1, text="")
 imagenql.pack(pady=20, padx=20)
