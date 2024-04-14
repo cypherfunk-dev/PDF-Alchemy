@@ -5,12 +5,10 @@ import os
 import threading
 import textwrap
 from pdf2docx import Converter
-import tabula
 import pandas as pd
-from tabula.io import read_pdf
 from PIL import Image, ImageTk
-
-jvm_options = ["-XX:ReservedCodeCacheSize=128m"]
+import camelot
+from pdfimg import ocr_my_pdf
 
 # Estilo e inicialización
 customtkinter.set_appearance_mode("light")
@@ -70,26 +68,13 @@ def switch_boton(value):
 def transformar():
     global rutaarchivo
     global botonruta
+    global progressbar
     botontransformar.configure(text="Converting\n"+ opcion)
     seleccion = selector.get()
     etiquetasaludo2.forget()
     progressbar = customtkinter.CTkProgressBar(frame_abajo, orientation="horizontal", mode="indeterminate", width=200, height=23, fg_color="white")
     progressbar.pack(padx=50, pady=20)
-    
-    def show_success_message(message):
-        global botonruta 
-        progressbar.stop()
-        progressbar.forget()  
-        show_checkmark()
-        frame_arriba.configure(fg_color="#f0c808")
-        frame_abajo.configure(fg_color="white")
-        botontransformar.forget()
-        etiquetasaludo.configure(text="Point your wand and choose a PDF \nfor alchemical transformation.", font=(my_font))
-        etiquetasaludo.pack(padx=50, pady=20)
-        botonruta = customtkinter.CTkButton(frame_arriba, text="Select a PDF to start", command=seleccionar_documento, fg_color="#dd1c1a", hover_color="#ea4b48", width=50, height=50)
-        botonruta.pack(padx=50)
-        imagenql.pack(pady=20, padx=20)
-        imagenql2.forget()
+    progressbar.start()
 
     if seleccion == "PDF to Word":
         progressbar.start()
@@ -102,11 +87,11 @@ def transformar():
                 cv = Converter(rutapdf)
                 cv.convert(rutadocx, start=0, end=None)
                 cv.close()
-                show_success_message("Conversion to Word completed successfully") 
+                show_success_message()
             except Exception as e:
                 progressbar.stop()
                 progressbar.forget()  
-                # etiquetasaludo.configure(text="Error: " + str(e), fg_color="red") 
+                etiquetasaludo.configure(text="Error: " + str(e), fg_color="red") 
         threading.Thread(target=pdf_to_docx, args=(rutapdf, rutadocx)).start()
 
     elif seleccion == "PDF to Excel":
@@ -115,23 +100,49 @@ def transformar():
         label.pack(padx=50, pady=30)
         rutapdf = rutaarchivo+".pdf"
         rutaxlsx = rutaarchivo+".xlsx"
-
         def pdf_to_excel(rutapdf, rutaxlsx):
             try:
-                tables = tabula.read_pdf(rutapdf, pages='all', java_options=jvm_options)
-                with pd.ExcelWriter(rutaxlsx) as writer:
-                    for i, table in enumerate(tables):
-                        table.to_excel(writer, sheet_name=f'Sheet{i+1}')
-                show_success_message("Conversion to Excel completed successfully") 
-            except Exception as e:
-                progressbar.stop()
-                progressbar.forget()  
-                # etiquetasaludo.configure(text="Error: " + str(e), fg_color="red") 
+                tables = camelot.read_pdf(rutapdf)
 
+                for i, table in enumerate(tables):
+                    # Create a unique Excel filename based on the table index
+                    table.df.to_excel(rutaxlsx, index=False)  # Export to Excel
+                show_success_message()
+
+            except Exception as e:
+                            progressbar.stop()
+                            progressbar.forget()  
+                            etiquetasaludo.configure(text="Error: " + str(e), fg_color="red") 
         threading.Thread(target=pdf_to_excel, args=(rutapdf, rutaxlsx)).start()
 
-    else:
-        print("Error")
+    elif seleccion == "PDF to CSV":
+        rutapdf = rutaarchivo+".pdf"
+        rutacsv = rutaarchivo+".csv"
+        def pdf_to_csv(rutapdf, rutacsv):
+                try:
+                    tables = camelot.read_pdf(rutapdf)
+                    tables.export(rutacsv, f='csv') # json, excel, html, markdown, sqlite
+                    show_success_message() 
+
+                except Exception as e:
+                            progressbar.stop()
+                            progressbar.forget()  
+                            etiquetasaludo.configure(text="Error: " + str(e), fg_color="red") 
+        threading.Thread(target=pdf_to_csv, args=(rutapdf, rutacsv)).start()  
+
+    elif seleccion == "PDF to OCR":
+        print("holamundo")
+        progressbar.start()
+        label.pack(padx=50)
+        rutapdf = rutaarchivo+".pdf"
+        rutaocr = rutaarchivo+"_OCR"+".pdf"
+        try:
+            ocr_my_pdf(rutapdf, rutaocr)
+        except Exception as e:
+            progressbar.stop()
+            progressbar.forget()  
+            etiquetasaludo.configure(text="Error: " + str(e), fg_color="red")
+        show_success_message()
 
     rutaarchivo = ""
     etiquetaruta.configure(text="")
@@ -141,6 +152,24 @@ def show_checkmark():
     CTkMessagebox(title="Operation Finished", message="Conversion completed successfully", icon="check", option_1="Ok")
     label.forget()
     imagenql.pack(pady=20, padx=20)
+
+def show_success_message():
+    global botonruta 
+    progressbar.stop()
+    progressbar.forget()  
+    show_checkmark()
+    frame_arriba.configure(fg_color="#f0c808")
+    frame_abajo.configure(fg_color="white")
+    botontransformar.forget()
+    etiquetasaludo.configure(text="Point your wand and choose a PDF \nfor alchemical transformation.", font=(my_font))
+    etiquetasaludo.pack(padx=50, pady=20)
+    botonruta = customtkinter.CTkButton(frame_arriba, text="Select a PDF to start", command=seleccionar_documento, fg_color="#dd1c1a", hover_color="#ea4b48", width=50, height=50)
+    botonruta.pack(padx=50)
+    imagenql.pack(pady=20, padx=20)
+    imagenql2.forget()
+
+def show_error_message(message):
+    CTkMessagebox(title="Error", message=message, icon="cancel", option_1="Ok")
 
 my_font = customtkinter.CTkFont(family=("helvetica"), size=24, weight="bold")
 my_font2 = customtkinter.CTkFont(family=("helvetica"), size=16, weight="bold")
@@ -157,8 +186,11 @@ frame_abajo.pack_propagate(False)
 etiquetasaludo = customtkinter.CTkLabel(frame_arriba, text="First, choose the file you want \nto work your magic on...", font=(my_font), corner_radius=55)
 etiquetasaludo.pack(padx=50, pady=30)
 
-gato1 = customtkinter.CTkImage(light_image=Image.open("image.jpeg"),size=(500,269))
-gato2 = customtkinter.CTkImage(light_image=Image.open("imagen2.jpg"),size=(400, 200))
+rutaimagen1 = os.path.abspath("image.jpeg")
+rutaimagen2 = os.path.abspath("imagen2.jpg")
+
+gato1 = customtkinter.CTkImage(light_image=Image.open(rutaimagen1),size=(500,269))
+gato2 = customtkinter.CTkImage(light_image=Image.open(rutaimagen2),size=(400, 200))
 # Creating label and packing it to the window.
 imagenql = customtkinter.CTkLabel(frame_abajo, image=gato1, text="")
 imagenql.pack(pady=20, padx=20)
@@ -171,7 +203,7 @@ etiquetaruta = customtkinter.CTkLabel(frame_arriba, text="", font=("helvetica",1
 etiquetaruta.pack(padx=50)
 
 # Opciones del selector
-opciones = ["PDF to Excel", "PDF to Word"]
+opciones = ["PDF to Excel", "PDF to Word", "PDF to CSV", "PDF to OCR"]
 
 # Crear el selector
 selector = customtkinter.CTkOptionMenu(frame_arriba, values=opciones, command=switch_boton)
