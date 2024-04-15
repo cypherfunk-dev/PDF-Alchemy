@@ -3,19 +3,7 @@ import pandas as pd
 import fitz # Assuming PyMuPDF is already installed
 import os
 
-
 def ocr_my_pdf(rutapdf, rutasalida):
-    """
-    Performs OCR on a PDF file and creates a new PDF with the extracted text.
-
-    Args:
-        rutapdf (str): Path to the input PDF file.
-        rutasalida (str): Desired output path (prefix "OCR_" will be added).
-        progressbar (CTkProgressBar): Reference to the progress bar object.
-
-    Returns:
-        None
-    """
     error_log = {}
     try:
         # Perform OCR and create new PDF with extracted text
@@ -33,7 +21,8 @@ def ocr_my_pdf(rutapdf, rutasalida):
                 ignore_index=True,
         )
         extraction_pdfs[output_file] = pages_df
+        return extraction_pdfs
     except Exception as e:
         error_log[rutapdf] = str(e) # Convert exception to string for better logging
-    return extraction_pdfs
+    
 

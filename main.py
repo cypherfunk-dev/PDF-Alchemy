@@ -9,6 +9,7 @@ import pandas as pd
 from PIL import Image, ImageTk
 import camelot
 from pdfimg import ocr_my_pdf
+import time
 
 # Estilo e inicialización
 customtkinter.set_appearance_mode("light")
@@ -131,18 +132,22 @@ def transformar():
         threading.Thread(target=pdf_to_csv, args=(rutapdf, rutacsv)).start()  
 
     elif seleccion == "PDF to OCR":
-        print("holamundo")
         progressbar.start()
+        label.configure(text="Applying OCR to your file...")
         label.pack(padx=50)
         rutapdf = rutaarchivo+".pdf"
         rutaocr = rutaarchivo+"_OCR"+".pdf"
         try:
-            ocr_my_pdf(rutapdf, rutaocr)
+            mi_hilo = threading.Thread(target=ocr_my_pdf, args=(rutapdf, rutaocr), daemon=True)
+            mi_hilo.start()
+            mi_hilo.join()
+
         except Exception as e:
             progressbar.stop()
             progressbar.forget()  
-            etiquetasaludo.configure(text="Error: " + str(e), fg_color="red")
-        show_success_message()
+            etiquetasaludo.configure(text="Error: " + str(e), fg_color="red") 
+    
+    show_success_message()
 
     rutaarchivo = ""
     etiquetaruta.configure(text="")
