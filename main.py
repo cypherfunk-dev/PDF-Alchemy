@@ -8,22 +8,27 @@ from pdf2docx import Converter
 import pandas as pd
 from PIL import Image, ImageTk
 import camelot
-from pdfimg import ocr_my_pdf
 import time
+import pandas as pd
+import fitz # Assuming PyMuPDF is already installed
+import ocrmypdf
+import pytesseract
 
 # Estilo e inicialización
+pytesseract.pytesseract.tesseract_cmd=r"C:/Program Files/Tesseract-OCR/tesseract.exe"
+
 customtkinter.set_appearance_mode("light")
 customtkinter.set_default_color_theme("blue")
 
 app = customtkinter.CTk()
 app.geometry("600x500")
-app.title('PDF Alchemy - Convert PDF to Word/Excel')
+app.title('PDF Alchemy - Convert PDF to...')
 app.resizable(False, False)
 
 # Definición de variables globales
 rutaarchivo = ""
 botonruta = None
-global imagenql2
+global imagen2
 
 # Definición de funciones
 def seleccionar_documento():
@@ -61,8 +66,8 @@ def switch_boton(value):
     botontransformar = customtkinter.CTkButton(frame_abajo, text="Convert\n" + opcion, command=transformar, height=100, width=200, fg_color="#B31312", hover_color="#B34312", font=("helvetica", 20))
     botontransformar.pack(padx=50, pady=10)
     selector.place_forget()
-    imagenql.forget()
-    imagenql2.pack(padx=20)
+    imagen1.forget()
+    imagen2.pack(padx=20)
     frame_arriba.pack_propagate(True)
     frame_abajo.pack_propagate(True)
 
@@ -156,7 +161,7 @@ def transformar():
 def show_checkmark():
     CTkMessagebox(title="Operation Finished", message="Conversion completed successfully", icon="check", option_1="Ok")
     label.forget()
-    imagenql.pack(pady=20, padx=20)
+    imagen1.pack(pady=20, padx=20)
 
 def show_success_message():
     global botonruta 
@@ -170,11 +175,33 @@ def show_success_message():
     etiquetasaludo.pack(padx=50, pady=20)
     botonruta = customtkinter.CTkButton(frame_arriba, text="Select a PDF to start", command=seleccionar_documento, fg_color="#dd1c1a", hover_color="#ea4b48", width=50, height=50)
     botonruta.pack(padx=50)
-    imagenql.pack(pady=20, padx=20)
-    imagenql2.forget()
+    imagen1.pack(pady=20, padx=20)
+    imagen2.forget()
 
 def show_error_message(message):
     CTkMessagebox(title="Error", message=message, icon="cancel", option_1="Ok")
+
+def ocr_my_pdf(rutapdf, rutasalida):
+    error_log = {}
+    try:
+        # Perform OCR and create new PDF with extracted text
+        output_file = ocrmypdf.ocr(
+        rutapdf, rutasalida, output_type="pdf", skip_text=True, deskew=True
+        )
+
+        extraction_pdfs = {}
+        pages_df = pd.DataFrame(columns=["text"])
+        doc = fitz.open(output_file) # Open the newly created OCRed PDF
+        for page_num in range(doc.page_count):
+            page = doc.load_page(page_num)
+            pages_df = pd.concat(
+                [pages_df, pd.DataFrame([{"text": page.get_text("text")}])],
+                ignore_index=True,
+        )
+        extraction_pdfs[output_file] = pages_df
+        return extraction_pdfs
+    except Exception as e:
+        error_log[rutapdf] = str(e) # Convert exception to string for better logging
 
 my_font = customtkinter.CTkFont(family=("helvetica"), size=24, weight="bold")
 my_font2 = customtkinter.CTkFont(family=("helvetica"), size=16, weight="bold")
@@ -197,9 +224,9 @@ rutaimagen2 = os.path.abspath("imagen2.jpg")
 gato1 = customtkinter.CTkImage(light_image=Image.open(rutaimagen1),size=(500,269))
 gato2 = customtkinter.CTkImage(light_image=Image.open(rutaimagen2),size=(400, 200))
 # Creating label and packing it to the window.
-imagenql = customtkinter.CTkLabel(frame_abajo, image=gato1, text="")
-imagenql.pack(pady=20, padx=20)
-imagenql2 = customtkinter.CTkLabel(frame_arriba, image=gato2, text="")
+imagen1 = customtkinter.CTkLabel(frame_abajo, image=gato1, text="")
+imagen1.pack(pady=20, padx=20)
+imagen2 = customtkinter.CTkLabel(frame_arriba, image=gato2, text="")
 
 botonruta = customtkinter.CTkButton(frame_arriba, text="Select a PDF to start", command=seleccionar_documento, fg_color="#dd1c1a", hover_color="#ea4b48", width=50, height=50)
 botonruta.pack(padx=50)
