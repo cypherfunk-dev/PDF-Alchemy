@@ -173,7 +173,6 @@ def show_success_message():
     botontransformar.forget()
     etiquetasaludo.configure(text="Point your wand and choose a PDF \nfor alchemical transformation.", font=(my_font))
     etiquetasaludo.pack(padx=50, pady=20)
-    botonruta = customtkinter.CTkButton(frame_arriba, text="Select a PDF to start", command=seleccionar_documento, fg_color="#dd1c1a", hover_color="#ea4b48", width=50, height=50)
     botonruta.pack(padx=50)
     imagen1.pack(pady=20, padx=20)
     imagen2.forget()

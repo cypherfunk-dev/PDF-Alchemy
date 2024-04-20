@@ -10,7 +10,6 @@ def ocr_my_pdf(rutapdf, rutasalida):
         output_file = ocrmypdf.ocr(
         rutapdf, rutasalida, output_type="pdf", skip_text=True, deskew=True
         )
-
         extraction_pdfs = {}
         pages_df = pd.DataFrame(columns=["text"])
         doc = fitz.open(output_file) # Open the newly created OCRed PDF
